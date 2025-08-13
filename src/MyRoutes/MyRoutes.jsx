@@ -1,21 +1,22 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-// import AdminPanel from '../../AdminPanel/AdminPanel';
 import Build from "../Pages/Build"
 import Settings from "../Pages/Settings";
 import Publish from "../Pages/Publish";
+import FormViewer from "../Form_view_userside/FormViewer";
+import Dashboard from "../Pages/Dashboard";
 
 const MyRoutes = () => {
   return (
    <>
    <BrowserRouter>
-   <Routes>
-   <Route path="/" element={<Build />} />
-    <Route path="/settings" element={< Settings/>} />
-    <Route path="/publish" element={<Publish /> } />
-
-   {/* <Route path='/admin' element={<AdminPanel/>}/> */}
-    </Routes>
-   </BrowserRouter>
+      <Routes>
+        <Route path="/build/:formNumber" element={<Build />} />
+        <Route path="/settings/:formNumber" element={<Settings />} />
+        <Route path="/publish/:formNumber" element={<Publish />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/form/:formNumber" element={<FormViewer />} />
+      </Routes>
+    </BrowserRouter>
    </>
   )
 }

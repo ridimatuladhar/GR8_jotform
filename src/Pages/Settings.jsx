@@ -1,13 +1,116 @@
-import React from 'react'
-import Nav from '../TopNav/Nav'
+import React, { useState, useEffect } from 'react';
+import Nav from '../TopNav/Nav';
+import FormPreview from '../Settings_sub/FormPreview';
+import FormTitleSettings from '../Settings_sub/FormTitleSettings';
+import SubmitSettings from '../Settings_sub/SubmitSettings';
+import FormDesc from '../Settings_sub/FormDesc';
+import { useParams } from 'react-router-dom';
 
 const Settings = () => {
+  const { formNumber } = useParams();
+  const [formFields, setFormFields] = useState([]);
+  const [formTitle, setFormTitle] = useState('');
+  const [formDesc, setFormDesc] = useState('');
+  const [submitSettings, setSubmitSettings] = useState({
+    label: 'Submit',
+    align: 'center',
+    bgColor: '#2563eb',
+    textColor: '#ffffff',
+    fontSize: 'text-base',
+  });
+
+  useEffect(() => {
+    // Try to load from localStorage first
+    const savedFields = JSON.parse(localStorage.getItem('formFields') || 'null');
+    const savedTitle = localStorage.getItem('formTitle');
+    const savedDesc = localStorage.getItem('formDesc');
+    const savedSubmitSettings = localStorage.getItem('submitSettings');
+
+    let needFetch = false;
+
+    if (savedFields && savedFields.length > 0) {
+      setFormFields(savedFields);
+    } else {
+      needFetch = true;
+    }
+
+    if (savedTitle) {
+      setFormTitle(savedTitle);
+    } else {
+      needFetch = true;
+    }
+
+    if (savedDesc) {
+      setFormDesc(savedDesc);
+    } else {
+      needFetch = true;
+    }
+
+    if (savedSubmitSettings) {
+      setSubmitSettings(JSON.parse(savedSubmitSettings));
+    } else {
+      needFetch = true;
+    }
+
+    // If any value is missing, fetch from backend
+    if (needFetch && formNumber) {
+      fetch(`http://localhost/GR8_jotform/Backend/form_view/get_form_by_number.php?formNumber=${formNumber}`)
+        .then(res => res.json())
+        .then(result => {
+          if (result.success && result.form) {
+            setFormFields(result.form.fields || []);
+            setFormTitle(result.form.title || '');
+            setFormDesc(result.form.description || '');
+            setSubmitSettings(result.form.submitSettings || {
+              label: 'Submit',
+              align: 'center',
+              bgColor: '#2563eb',
+              textColor: '#ffffff',
+              fontSize: 'text-base',
+            });
+          }
+        });
+    }
+  }, [formNumber]);
+
+  useEffect(() => {
+    localStorage.setItem('submitSettings', JSON.stringify(submitSettings));
+  }, [submitSettings]);
+
+  useEffect(() => {
+    localStorage.setItem('formTitle', formTitle);
+  }, [formTitle]);
+
+  useEffect(() => {
+    localStorage.setItem('formDesc', formDesc);
+  }, [formDesc]);
+
+  useEffect(() => {
+    if (formNumber) {
+      localStorage.setItem('formNumber', formNumber);
+    }
+  }, [formNumber]);
+
   return (
     <>
-    <Nav />
-      settings page hehehe
-    </>
-  )
-}
+      <Nav />
+      <div className="flex flex-col md:flex-row p-6 gap-6">
+        <div className="flex-grow">
+          <FormPreview
+            formFields={formFields}
+            formTitle={formTitle}
+            formDesc={formDesc}
+            submitSettings={submitSettings}
+          />
+        </div>
 
-export default Settings
+        <div className="w-full md:w-1/3 lg:w-1/4 bg-white p-4 rounded-lg shadow border border-gray-100">
+          <FormTitleSettings title={formTitle} setTitle={setFormTitle} />
+          <FormDesc formDesc={formDesc} setFormDesc={setFormDesc} />
+          <SubmitSettings submitSettings={submitSettings} onChange={setSubmitSettings} />
+        </div>
+      </div>
+    </>
+  );
+};
+export default Settings;
